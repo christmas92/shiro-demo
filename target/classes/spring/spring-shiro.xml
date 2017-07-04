@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd"
+>
+
+    <bean id="ajaxSessionFilter" class="shiro.filter.AjaxSessionFilter" />
+
+    <!-- Shiro Filter -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 安全管理器 -->
+        <property name="securityManager" ref="securityManager" />
+        <!-- 默认的登陆访问url -->
+        <property name="loginUrl" value="/login" />
+        <!-- 登陆成功后跳转的url -->
+        <property name="successUrl" value="/index" />
+        <!-- 没有权限跳转的url -->
+        <property name="unauthorizedUrl" value="/unauth" />
+        <property name="filterChainDefinitions">
+            <value>
+                <!-- anon 不需要认证 authc 需要认证 user 验证通过或RememberMe登录的都可以 -->
+                /shiro/static/** = anon
+                /shiro/login = anon
+                /** = user
+            </value>
+        </property>
+        <property name="filters">
+            <map>
+                <entry key="user" value-ref="ajaxSessionFilter"></entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- rememberMeCookie 模板 -->
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <property name="name" value="rememberMe" />
+        <!-- httpOnly默认为true -->
+        <property name="httpOnly" value="true" />
+        <!-- maxAge默认为-1,表示浏览器关闭时失效此Cookie -->
+        <property name="maxAge" value="#{7 * 24 * 60 * 60}" />
+    </bean>
+
+    <!-- rememberMe 管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cookie" ref="rememberMeCookie" />
+        <property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('5LuK5aSp5pif5pyf5LqUAA==')}" />
+    </bean>
+
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="userRealm" />
+        <property name="cacheManager" ref="springCacheManager" />
+        <property name="rememberMeManager" ref="rememberMeManager" />
+        <property name="sessionManager" ref="sessionManager" />
+    </bean>
+    
+    <bean id="userRealm" class="shiro.realm.UserRealm">
+        <property name="credentialsMatcher" ref="credentialsMatcher" />
+        <!-- authorizationCachingEnabled 默认为true -->
+        <property name="authorizationCachingEnabled" value="true" />
+        <property name="authorizationCacheName" value="authorizationCache" />
+        <!-- authenticationCachingEnabled 默认为false -->
+        <property name="authenticationCachingEnabled" value="true" />
+        <property name="authenticationCacheName" value="authenticationCache" />
+    </bean>
+
+    <!-- 用户授权信息Cache, 采用spring-cache, 具体请查看spring-ehcache.xml -->
+    <bean id="springCacheManager" class="shiro.springframework.cache.SpringCacheManager">
+        <property name="cacheManager" ref="cacheManager" />
+    </bean>
+    
+    <bean id="sessionListener" class="shiro.listener.SessionListener" />
+    <bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO">
+        <property name="activeSessionsCacheName" value="activeSessionsCache" />
+        <property name="cacheManager" ref="springCacheManager" />
+    </bean>
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="#{ 1800 * 1000 }" />
+        <property name="sessionIdUrlRewritingEnabled" value="false" />
+        <property name="sessionDAO" ref="sessionDAO" />
+        <property name="sessionListeners">
+            <list>
+                <ref bean="sessionListener" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="credentialsMatcher" class="shiro.credential.RetryLimitHashedCredentialsMatcher">
+        <constructor-arg name="cacheManager" ref="springCacheManager" />
+        <property name="passwordRetryCacheName" value="passwordRetryCache" />
+        <property name="hashAlgorithmName" value="md5" />
+        <property name="hashIterations" value="1" />
+        <property name="storedCredentialsHexEncoded" value="true" />
+    </bean>
+
+    <!-- 相当于调用SecurityUtils.setSecurityManager(securityManager) -->
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="org.apache.shiro.SecurityUtils.setSecurityManager" />
+        <property name="arguments" ref="securityManager" />
+    </bean>
+
+</beans>

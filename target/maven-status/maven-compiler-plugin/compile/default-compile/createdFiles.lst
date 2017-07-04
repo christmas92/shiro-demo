@@ -1,0 +1,16 @@
+shiro/controller/LoginController.class
+shiro/springframework/cache/SpringCache.class
+shiro/listener/SessionListener.class
+shiro/mapper/RoleMapper.class
+shiro/service/impl/UserServiceImpl.class
+shiro/constant/Constants.class
+shiro/realm/UserRealm.class
+shiro/filter/AjaxSessionFilter.class
+shiro/service/IUserService.class
+shiro/credential/RetryLimitHashedCredentialsMatcher.class
+shiro/controller/OrganizationController.class
+shiro/model/Role.class
+shiro/model/User.class
+shiro/mapper/UserMapper.class
+shiro/springframework/cache/SpringCacheManager.class
+shiro/controller/UserController.class

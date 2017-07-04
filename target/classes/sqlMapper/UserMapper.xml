@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shiro.mapper.UserMapper">
+    <select id="getByUsername" resultType="User">
+    SELECT 
+        id,
+        organization_id AS organizationId,
+        username,
+        password,
+        salt,
+        state
+    FROM
+        sys_user
+    WHERE
+        username = #{username}
+    </select>
+    
+    <select id="listRoles" resultType="String">
+    SELECT 
+        role
+    FROM
+        sys_user u
+            INNER JOIN
+        user_role t1 ON t1.user_id = u.id
+            INNER JOIN
+        sys_role t2 ON t2.id = t1.role_id
+    WHERE
+        u.username = #{username}
+    </select>
+    
+    <select id="listPermissions" resultType="String">
+    SELECT 
+        t3.permission
+    FROM
+        sys_user u
+            INNER JOIN
+        user_role t1 ON t1.user_id = u.id
+            INNER JOIN
+        role_resource t2 ON t2.role_id = t1.role_id
+            INNER JOIN
+        sys_resource t3 ON t3.id = t2.resource_id
+    WHERE
+        u.username = #{username}
+    </select>
+</mapper>

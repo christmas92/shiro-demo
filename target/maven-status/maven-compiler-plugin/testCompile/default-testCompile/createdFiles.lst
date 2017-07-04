@@ -1,0 +1,8 @@
+shiro/AuthenticatorTest.class
+shiro/realm/MyRealm1.class
+shiro/Base64Test.class
+shiro/service/UserServiceTest.class
+shiro/test.class
+shiro/testHello.class
+shiro/realm/MyRealm2.class
+shiro/realm/MyRealm3.class
